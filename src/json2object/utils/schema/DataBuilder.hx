@@ -413,10 +413,19 @@ class DataBuilder {
 	}
 
 	static function makeSchemaWriter(c:BaseType, type:Type, parsingType:ParsingType) {
-		var swriterName = c.name + "_" + (counter++);
-
 		var definitions = new Definitions();
 		var obj = format(makeSchema(type, definitions), definitions, parsingType);
+		// Compilation-server-safe naming (Sprout patch): the macro `counter` static resets to 0 each
+		// compilation, but types defined on a prior connect persist in the server — so a counter-based
+		// name collides ("Cannot redefine module") when a json2object-using module is re-typed (e.g. a
+		// component props edit). Key the generated type on a hash of its OWN schema content instead:
+		// unchanged structure → same name → reuse (getType); changed structure → new name → fresh type
+		// (the stale one is orphaned, harmless). No redefine, no stale schema.
+		var sig = haxe.crypto.Md5.encode(new haxe.macro.Printer().printExpr(obj));
+		var swriterName = c.name + "_" + sig;
+		try {
+			return Context.getType(swriterName);
+		} catch (e:Dynamic) {}
 		var schemaWriter = macro class $swriterName {
 			public var space:String;
 			public function new (space:String='') {
