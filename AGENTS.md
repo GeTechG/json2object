@@ -20,4 +20,4 @@ Run before pushing:
 
 ## Delivery
 - **One task — one branch**, cut from `master`. A branch carries one task only; a second task gets its own branch.
-- Deliver through a PR to `master`; never push to `master` directly.
+- No pull requests: this fork is worked on solo. When the task is done, run the checks on its branch, then rebase it onto `master` and fast-forward `master` to it (merge instead when a rebase is impractical) and push `master`.
