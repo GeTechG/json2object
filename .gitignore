@@ -1,3 +1,6 @@
 dump/
 testout/
 .unittest
+
+# Serena
+.serena
