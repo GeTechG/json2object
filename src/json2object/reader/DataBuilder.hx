@@ -67,6 +67,11 @@ class DataBuilder {
 		}
 	}
 
+	// UInt is its own abstract up to Haxe 4 and a typedef to haxe.UInt32 since Haxe 5
+	private static function isUInt(t:AbstractType) {
+		return (t.module == "UInt" && t.name == "UInt") || (t.module == "haxe.UInt32" && t.name == "UInt32");
+	}
+
 	// return true if type.followWithAbstract == String, Int, Float or Bool or Array of the previous
 	private static function isBaseType(type:Type) {
 		return switch (type.followWithAbstracts()) {
@@ -946,7 +951,7 @@ class DataBuilder {
 				switch (t.name) {
 					case "Int", "Float", "Single" if (!isNullable(base) && t.module == "StdTypes"):
 						macro value = 0;
-					case "UInt" if (!isNullable(base) && t.module == "UInt"):
+					case "UInt", "UInt32" if (!isNullable(base) && isUInt(t)):
 						macro value = 0;
 					case "Bool" if (!isNullable(base) && t.module == "StdTypes"):
 						macro value = false;
@@ -1034,7 +1039,7 @@ class DataBuilder {
 				else if (t.name == "Any") {
 					Context.fatalError("json2object: Parser of "+t.name+" are not generated", callPosition);
 				}
-				else if (t.module == "UInt" && t.name == "UInt") {
+				else if (isUInt(t)) {
 					makeUIntParser(parser, base);
 				}
 				else if (t.module == "StdTypes") {
