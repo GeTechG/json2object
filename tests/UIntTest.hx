@@ -12,6 +12,7 @@ class UIntTest implements utest.ITest {
 		var writer = new JsonWriter<UInt>();
 		var data = parser.fromJson('2147483648');
 		Assert.equals(0, parser.errors.length);
+		Assert.equals('2147483648', writer.write(data));
 		Assert.same(data, parser.fromJson(writer.write(data)));
 	}
 

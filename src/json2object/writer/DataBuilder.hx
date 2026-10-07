@@ -450,7 +450,7 @@ class DataBuilder {
 				else if (t.name == "Any") {
 					Context.fatalError("json2object: Parser of "+t.name+" are not generated", Context.currentPos());
 				}
-				else if (t.module == "UInt" || t.name == "UInt") {
+				else if (t.module == "UInt" || t.name == "UInt" || t.module == "haxe.UInt32") {
 					makeBasicWriter(base);
 				}
 				else if (t.module == "StdTypes") {
