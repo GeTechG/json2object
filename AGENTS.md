@@ -19,7 +19,7 @@ Independent fork of `elnabo/json2object` (type safe Haxe/JSON (de)serializer). I
 Run before pushing:
 - `bash .github/scripts/check-commit-kinds-test.sh` — self-test of the commit-kind check.
 - `bash .github/scripts/check-commit-kinds.sh origin/master..HEAD` — the check on your branch.
-- `HAXE_STD_PATH=.haxe/std .haxe/haxe .haxe-tests.hxml` — the test suite on the interpreter, with the pinned compiler (see *Toolchain*); must end with `ALL TESTS OK`. Known exception until J2O-2 is done: `tests.UIntTest` `test1` and `test2` fail on Haxe 5; any other failure is yours.
+- `HAXE_STD_PATH=.haxe/std .haxe/haxe .haxe-tests.hxml` — the test suite on the interpreter, with the pinned compiler (see *Toolchain*); must end with `ALL TESTS OK`.
 
 ## Specs
 `openspec/` holds this fork's own specs (`openspec/specs/`). Behaviour or rule changes go through `openspec/changes/`.
