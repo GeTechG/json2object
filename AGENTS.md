@@ -21,6 +21,8 @@ Run before pushing:
 - `bash .github/scripts/check-commit-kinds.sh origin/master..HEAD` — the check on your branch.
 - `HAXE_STD_PATH=.haxe/std .haxe/haxe .haxe-tests.hxml` — the test suite on the interpreter, with the pinned compiler (see *Toolchain*); must end with `ALL TESTS OK`.
 
+CI (`.github/workflows/ci.yml`) runs the same commit-kind check and test suite, plus the suite on Haxe 4.3.7 (job `test-haxe4`): upstream builds with Haxe 4, so code commits must stay green there too. That job is the one place Haxe 4 is used.
+
 ## Specs
 `openspec/` holds this fork's own specs (`openspec/specs/`). Behaviour or rule changes go through `openspec/changes/`.
 

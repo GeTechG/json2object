@@ -32,6 +32,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # The compiler, the test libraries and the language server build that tools/setup.sh also makes.
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/haxe-toolchain
+          key: haxe-toolchain-${{ hashFiles('tools/setup.sh', 'tools/haxe-build.pin') }}
+      - name: Set up the pinned compiler
+        run: bash tools/setup.sh
+      - name: Run the tests on the interpreter
+        run: HAXE_STD_PATH=.haxe/std .haxe/haxe .haxe-tests.hxml
+
+  # Code commits go upstream, which builds with Haxe 4.
+  test-haxe4:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
       - uses: krdlab/setup-haxe@v1
         with:
           haxe-version: ${{ env.HAXE_VERSION }}
