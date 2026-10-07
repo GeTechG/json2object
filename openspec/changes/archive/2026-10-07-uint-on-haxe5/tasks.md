@@ -8,4 +8,4 @@
 
 ## 3. Verify
 - [x] 3.1 The suite ends with `ALL TESTS OK` on the pinned compiler
-- [ ] 3.2 CI (Haxe 4.3.7) is green on `master`
+- [x] 3.2 The suite ends with `ALL TESTS OK` on Haxe 4 (`tests/build/build_interp.hxml`, 4.3.6 locally; CI runs 4.3.7 on `master`)
