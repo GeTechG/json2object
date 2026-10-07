@@ -3,17 +3,23 @@
 Independent fork of `elnabo/json2object` (type safe Haxe/JSON (de)serializer). Its consumers pin it by commit; they do not dictate how it is worked on. This file is the source of truth here.
 
 ## Commits
-- Every commit is **code** (library sources under `src/`, tests under `tests/`, upstream metadata) or **infrastructure** (the paths listed in `.github/infra-paths`: this file, `openspec/`, our CI and scripts). Never both — CI rejects a mixed commit.
+- Every commit is **code** (library sources under `src/`, tests under `tests/`, upstream metadata) or **infrastructure** (the paths listed in `.github/infra-paths`: this file, `openspec/`, `tools/`, our CI and scripts). Never both — CI rejects a mixed commit.
 - Code commit messages are written as for upstream `elnabo/json2object`: a plain imperative summary of the library change, no mention of consumers or their paths.
 - OpenSpec artifacts (proposal, tasks, specs, archive) are infrastructure commits and never share a commit with code.
 - An upstream PR is a cherry-pick of one task's code commits; keep them self-contained — they must build and pass the tests without any infrastructure commit.
 - Changing the list of infrastructure paths is an infrastructure commit.
 
+## Toolchain
+- `bash tools/setup.sh` — run once per checkout or worktree, and again after adding or removing source files; restart Serena afterwards. It installs the pinned compiler behind the gitignored `.haxe` symlink, fetches the test libraries, and writes the test config `.haxe-tests.hxml` and Serena's config under `.serena/`. Linux x86_64 only.
+- **Build, type and run the tests only with this compiler**: `.haxe/haxe` with `HAXE_STD_PATH=.haxe/std`. Never the system Haxe 4.x.
+- The compiler is a Haxe 5 build of `GeTechG/haxe`, pinned in `tools/haxe-build.pin` (`<build key> <sha256 of the archive>`). Changing the compiler is one commit that changes this file.
+- Serena (`.mcp.json`, `.codex/config.toml`) navigates symbols through a language server on the same compiler. Its reference lists are not exhaustive, and shrink further when a module listed in `.serena/lsp.hxml` does not compile (`.haxe/haxe .serena/lsp.hxml --no-output` must exit 0): before a rename, check them against a text search.
+
 ## Checks
 Run before pushing:
 - `bash .github/scripts/check-commit-kinds-test.sh` — self-test of the commit-kind check.
 - `bash .github/scripts/check-commit-kinds.sh origin/master..HEAD` — the check on your branch.
-- `haxe tests/build/build_interp.hxml` — the test suite on the interpreter (needs `haxelib install hxjsonast` and `haxelib install utest`); must end with `ALL TESTS OK`. Haxe version is pinned in `.github/workflows/ci.yml`.
+- `HAXE_STD_PATH=.haxe/std .haxe/haxe .haxe-tests.hxml` — the test suite on the interpreter, with the pinned compiler (see *Toolchain*); must end with `ALL TESTS OK`. Known exception until J2O-2 is done: `tests.UIntTest` `test1` and `test2` fail on Haxe 5; any other failure is yours.
 
 ## Specs
 `openspec/` holds this fork's own specs (`openspec/specs/`). Behaviour or rule changes go through `openspec/changes/`.

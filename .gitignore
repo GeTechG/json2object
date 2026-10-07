@@ -4,3 +4,7 @@ testout/
 
 # Serena
 .serena
+
+# tools/setup.sh
+.haxe
+.haxe-tests.hxml
