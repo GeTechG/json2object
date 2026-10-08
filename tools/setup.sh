@@ -107,6 +107,8 @@ modules() { # <classpath> [<package>]
 mkdir -p "$ROOT/.serena"
 {
   echo "$MARK — do not edit."
+  echo "# tests/ is typed here together with src/ (modules tests.*). References the compiler still does not"
+  echo "# report — @:genericBuild types, enum constructors in case patterns, imports — are listed in AGENTS.md."
   echo "$LIBS"
   grep '^-cp ' "$COMMON"
   echo "-w -WIfDisplay"
