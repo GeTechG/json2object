@@ -8,3 +8,4 @@ testout/
 # tools/setup.sh
 .haxe
 .haxe-tests.hxml
+.ast-grep
