@@ -1,0 +1,6 @@
+# ast-grep on this fork's Haxe sources: search and rewrite by code shape (see AGENTS.md, Toolchain).
+# tools/setup.sh installs the pinned ast-grep as .ast-grep/ast-grep and builds the grammar library.
+customLanguages:
+  haxe:
+    libraryPath: .ast-grep/haxe.so
+    extensions: [hx]
