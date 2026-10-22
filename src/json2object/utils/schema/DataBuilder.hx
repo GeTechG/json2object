@@ -352,8 +352,12 @@ class DataBuilder {
 			case TEnum(_.get()=>t,p):
 				makeEnumSchema(type.applyTypeParameters(t.params, p), definitions);
 			case TType(_.get()=>t, p):
-				var _tmp = makeSchema(t.type.applyTypeParameters(t.params, p), definitions, name);
+				var _tmp = makeSchema(t.type.applyTypeParameters(t.params, p), definitions, name, optional);
 				if (t.name != "Null" && t.name != "List") {
+					if (definitions.get(name) == null) {
+						// Alias of a type without a definition of its own (Float, Null<T>, Array<T>...): inline it
+						return describe(_tmp, t.doc);
+					}
 					if (t.doc != null) {
 						define(name, describe(definitions.get(name), t.doc), definitions);
 					}
@@ -363,7 +367,7 @@ class DataBuilder {
 				}
 				(t.name == "Null" && !optional) ? anyOf(JTNull, _tmp) : _tmp;
 			case TLazy(f):
-				makeSchema(f(), definitions);
+				makeSchema(f(), definitions, null, optional);
 			default:
 				throw UnsupportedSchemaType(name);
 		}
