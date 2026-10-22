@@ -58,6 +58,18 @@ typedef SimpleDefault = {
 	var bool:Bool;
 }
 
+typedef MaybeFloat = Null<Float>;
+typedef AliasFloat = Float;
+/** A name */
+typedef AliasString = String;
+
+typedef AliasedFields = {
+	@:default(5.) var m:MaybeFloat;
+	@:optional var o:MaybeFloat;
+	@:default(1.5) var f:AliasFloat;
+	var s:AliasString;
+}
+
 typedef OuterStruct = {
 	@:optional var outer:InnerStruct;
 }
@@ -226,6 +238,12 @@ class StructureTest implements utest.ITest {
 	public function test12 () {
 		var schema = new JsonSchemaWriter<SimpleDefault>().schema;
 		var oracle = '{"definitions": {"{ b : Int, a : String }": {"additionalProperties": false,"properties": {"b": {"type": "integer"},"a": {"type": "string"}},"required": ["a","b"],"type": "object"},"tests.SimpleDefault": {"additionalProperties": false,"properties": {"foo": {"$$ref": "#/definitions/{ b : Int, a :String }"},"auto": {"default": "test", "type": "string"},"bool":{"default": false, "type": "boolean"}},"required": ["auto","bool","foo"],"type": "object"}},"$$ref": "#/definitions/tests.SimpleDefault","$$schema": "http://json-schema.org/draft-07/schema#"}';
+		Assert.isTrue(JsonComparator.areSame(oracle, schema));
+	}
+
+	public function test13 () {
+		var schema = new JsonSchemaWriter<AliasedFields>().schema;
+		var oracle = '{"definitions": {"tests.AliasedFields": {"additionalProperties": false,"properties": {"m": {"anyOf": [{"type": "null"},{"type": "number"}],"default": 5},"o": {"type": "number"},"f": {"type": "number","default": 1.5},"s": {"type": "string","description": "A name"}},"required": ["f","m","s"],"type": "object"}},"$$ref": "#/definitions/tests.AliasedFields","$$schema": "http://json-schema.org/draft-07/schema#"}';
 		Assert.isTrue(JsonComparator.areSame(oracle, schema));
 	}
 	#end
