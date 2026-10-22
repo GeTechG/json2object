@@ -3,7 +3,7 @@
 
 ## What Changes
 - The schema of a typedef alias of a non-structure type is the schema of the aliased type, inlined (with the typedef's doc as its description); no definition is created for the alias. An alias of a structure keeps its definition, named by its type path.
-- An `@:optional` field typed by an alias of `Null<T>` gets the same schema as an `@:optional` field of type `Null<T>`.
+- `@:optional` is kept through a typedef alias and a lazy type, so an `@:optional` field typed by an alias of `Null<T>` gets the same schema as an `@:optional` field of type `Null<T>`.
 - A test in `tests.StructureTest` for fields typed by such aliases.
 
 ## Capabilities
