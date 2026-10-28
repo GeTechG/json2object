@@ -572,6 +572,7 @@ class DataBuilder {
 		}
 		var default_e = macro {
 			errors.push(IncorrectEnumValue(name, $v{expected}, putils.convertPosition(tagField.value.pos)));
+			value = null;
 			parsingThrow();
 		};
 		var tagSwitch = {expr: ESwitch(macro name, cases, default_e), pos: Context.currentPos()};
@@ -588,6 +589,7 @@ class DataBuilder {
 			}
 			if (tagField == null) {
 				errors.push(IncorrectType($v{tag}, $v{expected}, pos));
+				value = null;
 				parsingThrow();
 				return;
 			}
@@ -596,6 +598,7 @@ class DataBuilder {
 					$tagSwitch;
 				default:
 					errors.push(IncorrectType($v{tag}, $v{expected}, putils.convertPosition(tagField.value.pos)));
+					value = null;
 					parsingThrow();
 			}
 		});

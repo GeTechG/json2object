@@ -109,6 +109,13 @@ class TaggedEnumTest implements utest.ITest
 		Assert.same([IncorrectType("", "tests.Shape", pos(1, 3))], parser.errors);
 		Assert.isNull(data);
 
+		// A reused parser does not keep the previous value
+		for (json in ['{"kind": "square"}', '{"width": 1}', '{"kind": 1}']) {
+			Assert.notNull(parser.fromJson('{"kind": "empty"}'));
+			Assert.isNull(parser.fromJson(json));
+			Assert.equals(1, parser.errors.length);
+		}
+
 		Assert.equals("line1: characters 10-18 : Identifier 'square' isn't part of 'Shape.kind (rect | circle | empty)'",
 			json2object.ErrorUtils.convertError(IncorrectEnumValue("square", expected, pos(10, 18))));
 	}
