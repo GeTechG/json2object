@@ -36,6 +36,10 @@ typedef JsonSchemaType = {
 	@:optional
 	var anyOf: Array<JsonSchemaType>;
 	@:optional
+	var oneOf: Array<JsonSchemaType>;
+	@:optional
+	var discriminator: JsonSchemaDiscriminator;
+	@:optional
 	var definitions: Map<String, JsonSchemaType>;
 	@:optional
 	var markdownEnumDescriptions: Array<String>;
@@ -49,4 +53,8 @@ typedef JsonSchemaType = {
 	var enum_float: Array<Null<Float>>;
 	@:optional @:alias("enum")
 	var enum_bool: Array<Null<Bool>>;
+}
+
+typedef JsonSchemaDiscriminator = {
+	var propertyName: String;
 }

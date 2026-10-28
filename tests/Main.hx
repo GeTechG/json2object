@@ -44,6 +44,7 @@ class Main
 		r.addCase(new MapTest());
 		r.addCase(new ObjectTest());
 		r.addCase(new StructureTest());
+		r.addCase(new TaggedEnumTest());
 		r.addCase(new UIntTest());
 
 		utest.ui.Report.create(r, NeverShowSuccessResults, AlwaysShowHeader);

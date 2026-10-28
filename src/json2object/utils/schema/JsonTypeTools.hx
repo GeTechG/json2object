@@ -180,6 +180,12 @@ class JsonTypeTools {
 				declare("anyOf", anyOfExpr);
 			case JTWithDescr(type, descr):
 				return _toExpr(type, descr, defaultValue, parsingType);
+			case JTWithDefault(type, value):
+				return _toExpr(type, descr, value, parsingType);
+			case JTTagged(tag, branches):
+				var decls = [ for (b in branches) toExpr(b, parsingType)];
+				declare("oneOf", {expr: EArrayDecl(decls), pos:Context.currentPos()});
+				declare("discriminator", macro {propertyName: $v{tag}});
 		}
 
 		if (descr != '') {
