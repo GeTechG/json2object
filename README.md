@@ -69,6 +69,44 @@ An other parser `json2object.utils.special.VSCodeSchemaWriter` has been introduc
 - Enum values
 - Abstract over a supported type
 - Abstract enum of String, Int, Float or Bool
+- Enum marked `@:tagged`, as a flat object with a tag field (see below)
+
+### Tagged enums
+
+An enum marked `@:tagged("<tag>")` is read and written as a single flat object: the field `<tag>` holds the constructor name, and the fields of that constructor's argument sit beside it.
+```haxe
+@:tagged("kind")
+enum Shape {
+	rect(s:{width:Float, height:Float});
+	circle(s:{radius:Float, ?label:String});
+}
+```
+`Shape.rect({width: 32, height: 16})` is written as
+```json
+{"kind": "rect", "width": 32, "height": 16}
+```
+The writer puts the tag first. The parser accepts it at any position, and reads the other fields the way it reads any anonymous structure: a missing required field is an error, an `@:optional` field may be left out, and `@:alias`, `@:default` and `@:jignored` apply. Each constructor's object is closed, so a field that the selected constructor does not declare is reported as an unknown variable. A missing tag, or one that is not a string, gives an `IncorrectType` error; a tag that names no constructor gives an `IncorrectEnumValue` error. Both errors list the possible tags (`Shape.kind (rect | circle)`), and the parsed value is then `null`.
+
+Constraints, checked at compile time (a violation fails the build with a message naming the enum and the constructor):
+- the argument of `@:tagged` is a single string constant that is a valid identifier;
+- every constructor takes exactly one argument, an anonymous structure (or a typedef of one);
+- no field of that structure is named (or `@:alias`ed) as the tag.
+
+The `JsonSchemaWriter` describes a tagged enum as a `oneOf` with one closed object (`"additionalProperties": false`) per constructor. In each object the tag is required and has a `const` value, the constructor name. The `oneOf` comes with an OpenAPI-style `discriminator`:
+```json
+{
+	"discriminator": {"propertyName": "kind"},
+	"oneOf": [
+		{"type": "object", "additionalProperties": false,
+		 "properties": {"kind": {"const": "rect"}, "width": {"type": "number"}, "height": {"type": "number"}},
+		 "required": ["height", "kind", "width"]},
+		{"type": "object", "additionalProperties": false,
+		 "properties": {"kind": {"const": "circle"}, "radius": {"type": "number"}, "label": {"type": "string"}},
+		 "required": ["kind", "radius"]}
+	]
+}
+```
+A `@:default(...)` on a constructor, giving the value of its argument, becomes the `default` of that constructor's object in the schema.
 
 ### Other
 
