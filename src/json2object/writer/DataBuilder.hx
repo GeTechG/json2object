@@ -29,6 +29,7 @@ import haxe.macro.Context;
 import haxe.macro.Type;
 import haxe.macro.TypeTools;
 import json2object.Error;
+import json2object.utils.TaggedEnum;
 
 using StringTools;
 using haxe.macro.ExprTools;
@@ -130,13 +131,23 @@ class DataBuilder {
 		};
 	}
 
-	private static function makeObjectOrAnonWriter (type:Type, baseParser:BaseType) : Expr {
+	/**
+	 * Writes the object `value` (`o` by default) of `type`. Given a tag, writes the branch `branch` of a tagged enum:
+	 * the tag first, then the fields of the branch in declaration order.
+	 */
+	private static function makeObjectOrAnonWriter (type:Type, baseParser:BaseType, ?value:Expr, ?tag:String, ?branch:TaggedBranch) : Expr {
+		if (value == null) { value = macro o; }
 		var fields:Array<ClassField>;
 
 		var tParams:Array<TypeParameter>;
 		var params:Array<Type>;
 
 		switch (type) {
+			case _ if (branch != null):
+				fields = branch.fields;
+				tParams = [];
+				params = [];
+
 			case TAnonymous(_.get()=>t):
 				fields = t.fields;
 				tParams = [];
@@ -165,6 +176,11 @@ class DataBuilder {
 		var assignations:Array<Expr> = [];
 		var skips: Array<Expr> = [];
 
+		if (branch != null) {
+			assignations.push(macro indent + space + $v{'"' + tag + '": "' + branch.name + '"'});
+			skips.push(macro false);
+		}
+
 		for (field in fields) {
 			if (field.meta.has(":jignored")) { continue; }
 			switch(field.kind) {
@@ -173,7 +189,7 @@ class DataBuilder {
 						continue;
 					}
 
-					var f_a = (r == AccCall || r == AccNever || r == AccNo) ? macro Reflect.field(o, $v{field.name}) : { expr: EField(macro o, field.name), pos: Context.currentPos() };
+					var f_a = (r == AccCall || r == AccNever || r == AccNo) ? macro Reflect.field($value, $v{field.name}) : { expr: EField(value, field.name), pos: Context.currentPos() };
 					var f_type = field.type.applyTypeParameters(tParams, params);
 					var f_cls = {name:baseParser.name, pack:baseParser.pack, params:[TPType(f_type.toComplexType())]};
 
@@ -236,7 +252,7 @@ class DataBuilder {
 		return macro {
 			var indent = buildIndent(space, level);
 			var firstIndent = (indentFirst) ? indent : '';
-			if (o == null) { return firstIndent + "null"; }
+			if ($value == null) { return firstIndent + "null"; }
 			@:privateAccess{
 				var decl = ${array};
 				if (ignoreNullOptionals) {
@@ -258,7 +274,29 @@ class DataBuilder {
 		};
 	}
 
+	private static function makeTaggedEnumWriter (t:EnumType, params:Array<Type>, tag:String, baseParser:BaseType) : Expr {
+		var cases = [];
+		for (branch in TaggedEnum.branches(t, params, tag)) {
+			var write = makeObjectOrAnonWriter(branch.type, baseParser, macro __branch, tag, branch);
+			cases.push({expr: write, guard: null, values: [macro $i{branch.name}(__branch)]});
+		}
+		var switchExpr = {expr:ESwitch(macro o, cases, null), pos:Context.currentPos()};
+		return macro {
+			if (o == null) { return ((indentFirst) ? buildIndent(space, level) : '') + "null"; }
+			$switchExpr;
+		};
+	}
+
 	private static function makeEnumWriter (type:Type, baseParser:BaseType) : Expr {
+		switch (type) {
+			case TEnum(_.get()=>t, p):
+				var tag = TaggedEnum.tagOf(t);
+				if (tag != null) {
+					return makeTaggedEnumWriter(t, p, tag, baseParser);
+				}
+			default:
+		}
+
 		var tParams:Array<TypeParameter>;
 		var params:Array<Type>;
 

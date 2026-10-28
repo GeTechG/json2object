@@ -30,6 +30,7 @@ import haxe.macro.Context;
 import haxe.macro.Type;
 import haxe.macro.TypeTools;
 import json2object.Error;
+import json2object.utils.TaggedEnum;
 
 using StringTools;
 using haxe.macro.ExprTools;
@@ -553,7 +554,67 @@ class DataBuilder {
 		changeFunction("loadJsonNull", parser, macro {value = null;});
 	}
 
+	public static function makeTaggedEnumParser(parser:TypeDefinition, t:EnumType, params:Array<Type>, tag:String, baseParser:BaseType) {
+		var expected = TaggedEnum.expected(t, tag);
+		var cases = new Array<Case>();
+		for (branch in TaggedEnum.branches(t, params, tag)) {
+			var b_cls = {name:baseParser.name, pack:baseParser.pack, params:[TPType(branch.type.toComplexType())]};
+			var constructor = TaggedEnum.constructorExpr(t, branch.name);
+			cases.push({
+				expr: macro {
+					var branch = new $b_cls(errors, putils, THROW);
+					@:privateAccess branch.loadJsonObject(fields, pos, variable);
+					value = cast $constructor(branch.value);
+				},
+				guard: null,
+				values: [macro $v{branch.name}]
+			});
+		}
+		var default_e = macro {
+			errors.push(IncorrectEnumValue(name, $v{expected}, putils.convertPosition(tagField.value.pos)));
+			value = null;
+			parsingThrow();
+		};
+		var tagSwitch = {expr: ESwitch(macro name, cases, default_e), pos: Context.currentPos()};
+
+		changeFunction("loadJsonObject", parser, macro {
+			var tagField:hxjsonast.Json.JObjectField = null;
+			var fields = new Array<hxjsonast.Json.JObjectField>();
+			for (field in o) {
+				if (tagField == null && field.name == $v{tag}) {
+					tagField = field;
+				} else {
+					fields.push(field);
+				}
+			}
+			if (tagField == null) {
+				errors.push(IncorrectType($v{tag}, $v{expected}, pos));
+				value = null;
+				parsingThrow();
+				return;
+			}
+			switch (tagField.value.value) {
+				case JString(name):
+					$tagSwitch;
+				default:
+					errors.push(IncorrectType($v{tag}, $v{expected}, putils.convertPosition(tagField.value.pos)));
+					value = null;
+					parsingThrow();
+			}
+		});
+		changeFunction("loadJsonNull", parser, macro { value = null; });
+	}
+
 	public static function makeEnumParser(parser:TypeDefinition, type:Type, baseParser:BaseType) {
+		switch (type) {
+			case TEnum(_.get()=>t, p):
+				var tag = TaggedEnum.tagOf(t);
+				if (tag != null) {
+					makeTaggedEnumParser(parser, t, p, tag, baseParser);
+					return;
+				}
+			default:
+		}
 
 		var objMacro:Expr;
 		var strMacro:Expr;

@@ -30,6 +30,7 @@ import haxe.macro.Context;
 import haxe.macro.Type;
 import haxe.macro.TypeTools;
 import json2object.Error;
+import json2object.utils.TaggedEnum;
 import json2object.utils.schema.JsonType;
 
 using haxe.macro.ExprTools;
@@ -154,7 +155,50 @@ class DataBuilder {
 		define(name, JTEnumValues(enumValues), definitions, doc);
 		return JTRef(name);
 	}
+
+	static function makeTaggedEnumSchema(type:Type, t:EnumType, params:Array<Type>, tag:String, definitions:Definitions):JsonType {
+		var name = type.toString();
+		var writerCls = {name:"JsonWriter", pack:["json2object"], params:[TPType(type.toComplexType())]};
+		try {
+			define(name, null, definitions); // Protection against recursive types
+			var branches = [];
+			for (branch in TaggedEnum.branches(t, params, tag)) {
+				var properties = new Map<String, JsonType>();
+				var required = [tag];
+				var defaults = new Map<String, Expr>();
+				makeFieldsSchema(branch.fields, [], [], definitions, properties, required, defaults);
+				properties.set(tag, JTString(branch.name));
+				var jt = describe(JTObject(properties, required, defaults), branch.construct.doc);
+
+				var defaultMeta = branch.construct.meta.extract(":default");
+				if (defaultMeta.length == 1 && defaultMeta[0].params != null && defaultMeta[0].params.length == 1) {
+					var ct = branch.type.toComplexType();
+					var constructor = TaggedEnum.constructorExpr(t, branch.name);
+					var e = defaultMeta[0].params[0];
+					jt = JTWithDefault(jt, macro new $writerCls(true).write($constructor(($e : $ct))));
+				}
+				branches.push(jt);
+			}
+			define(name, JTTagged(tag, branches), definitions, t.doc);
+			return JTRef(name);
+		}
+		catch (e:Any) {
+			if (definitions.get(name) == null) {
+				definitions.remove(name);
+			}
+			throw e;
+		}
+	}
+
 	static function makeEnumSchema(type:Type, definitions:Definitions):JsonType {
+		switch (type) {
+			case TEnum(_.get()=>t, p):
+				var tag = TaggedEnum.tagOf(t);
+				if (tag != null) {
+					return makeTaggedEnumSchema(type, t, p, tag, definitions);
+				}
+			default:
+		}
 		var name = type.toString();
 		var doc:Null<String> = null;
 
@@ -214,6 +258,53 @@ class DataBuilder {
 		define(name, JTMap(onlyInt, makeSchema(valueType, definitions)), definitions);
 		return JTRef(name);
 	}
+
+	/**
+	 * Adds the schema of each field of a record to `properties`, and its name to `required` unless optional.
+	 */
+	static function makeFieldsSchema(fields:Array<ClassField>, tParams:Array<TypeParameter>, params:Array<Type>, definitions:Definitions, properties:Map<String, JsonType>, required:Array<String>, defaults:Map<String, Expr>) {
+		for (field in fields) {
+			if (field.meta.has(":jignored")) { continue; }
+			switch(field.kind) {
+				case FVar(r,w):
+					if (r == AccCall && w == AccCall && !field.meta.has(":isVar")) {
+						continue;
+					}
+
+					var f_type = field.type.applyTypeParameters(tParams, params);
+					var f_name = field.name;
+					for (m in field.meta.extract(":alias")) {
+						if (m.params != null && m.params.length == 1) {
+							switch (m.params[0].expr) {
+								case EConst(CString(s)): f_name = s;
+								default:
+							}
+						}
+					}
+
+					var optional = field.meta.has(":optional");
+					if (!optional) {
+						required.push(f_name);
+					}
+
+					var defaultMeta = field.meta.extract(':default');
+					if (defaultMeta.length == 1 && canHaveDefault(f_type)) {
+						var params = defaultMeta[0].params;
+						if (params != null && params.length == 1) {
+							var ct = f_type.toComplexType();
+							var parserCls = {name:"JsonParser", pack:["json2object"], params:[TPType(ct)]};
+							var writerCls = {name:"JsonWriter", pack:["json2object"], params:[TPType(ct)]};
+							var e = (params[0].toString() == "auto") ? macro new $parserCls([], new json2object.PositionUtils(''), NONE).getAuto() : params[0];
+							defaults.set(f_name, macro new $writerCls(true).write($e));
+						}
+					}
+
+					properties.set(f_name, describe(makeSchema(f_type, definitions, optional), field.doc));
+				default:
+			}
+		}
+	}
+
 	static function makeObjectSchema(type:Type, name:String, definitions:Definitions) : JsonType {
 		var properties = new Map<String, JsonType>();
 		var required = new Array<String>();
@@ -251,46 +342,7 @@ class DataBuilder {
 		try {
 			var defaults = new Map<String, Expr>();
 			define(name, null, definitions); // Protection against recursive types
-			for (field in fields) {
-				if (field.meta.has(":jignored")) { continue; }
-				switch(field.kind) {
-					case FVar(r,w):
-						if (r == AccCall && w == AccCall && !field.meta.has(":isVar")) {
-							continue;
-						}
-
-						var f_type = field.type.applyTypeParameters(tParams, params);
-						var f_name = field.name;
-						for (m in field.meta.extract(":alias")) {
-							if (m.params != null && m.params.length == 1) {
-								switch (m.params[0].expr) {
-									case EConst(CString(s)): f_name = s;
-									default:
-								}
-							}
-						}
-
-						var optional = field.meta.has(":optional");
-						if (!optional) {
-							required.push(f_name);
-						}
-
-						var defaultMeta = field.meta.extract(':default');
-						if (defaultMeta.length == 1 && canHaveDefault(f_type)) {
-							var params = defaultMeta[0].params;
-							if (params != null && params.length == 1) {
-								var ct = f_type.toComplexType();
-								var parserCls = {name:"JsonParser", pack:["json2object"], params:[TPType(ct)]};
-								var writerCls = {name:"JsonWriter", pack:["json2object"], params:[TPType(ct)]};
-								var e = (params[0].toString() == "auto") ? macro new $parserCls([], new json2object.PositionUtils(''), NONE).getAuto() : params[0];
-								defaults.set(f_name, macro new $writerCls(true).write($e));
-							}
-						}
-
-						properties.set(f_name, describe(makeSchema(f_type, definitions, optional), field.doc));
-					default:
-				}
-			}
+			makeFieldsSchema(fields, tParams, params, definitions, properties, required, defaults);
 
 			define(name, JTObject(properties, required, defaults), definitions, doc);
 			return JTRef(name);

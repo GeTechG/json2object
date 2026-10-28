@@ -36,4 +36,7 @@ enum JsonType {
 	JTRef(name:String);
 	JTAnyOf(types:Array<JsonType>);
 	JTWithDescr(type:JsonType, descr:String);
+	JTWithDefault(type:JsonType, defaultValue:haxe.macro.Expr);
+	/** A tagged enum: one closed object per constructor, discriminated by the property `tag`. */
+	JTTagged(tag:String, branches:Array<JsonType>);
 }
