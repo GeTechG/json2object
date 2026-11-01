@@ -54,8 +54,7 @@ typedef AbstractStruct = {
 @:forward(length, toString)
 abstract ReadonlyArray<T>(Array<T>) from Array<T> {}
 
-@:enum
-abstract EnumAbstractInt(Int) {
+enum abstract EnumAbstractInt(Int) {
 	var A = 1;
 	var B = 2;
 	var Z = 26;
@@ -65,8 +64,7 @@ typedef EnumAbstractIntStruct = {
 	val:EnumAbstractInt
 }
 
-@:enum
-abstract EnumAbstractString(Null<String>) {
+enum abstract EnumAbstractString(Null<String>) {
 	var SA = "Z";
 	var SB = "Y";
 	var SZ = "A";
@@ -76,8 +74,7 @@ typedef EnumAbstractStringStruct = {
 	@optional var val:EnumAbstractString;
 }
 
-@:enum
-abstract TernaryValue(Null<Bool>) {
+enum abstract TernaryValue(Null<Bool>) {
 	var BA = true;
 	var BB = false;
 	var BC = null;
@@ -87,8 +84,7 @@ typedef TernaryStruct = {
 	var val:TernaryValue;
 }
 
-@:enum
-abstract FloatValue(Float) {
+enum abstract FloatValue(Float) {
 	var PI = 3.14;
 	var ZERO = 0.0;
 }

@@ -22,8 +22,7 @@ SOFTWARE.
 
 package tests;
 
-@:enum
-abstract TestEnum (String)
+enum abstract TestEnum (String)
 {
 	var VAL1 = "value1";
 	var VAL2 = "value2";
