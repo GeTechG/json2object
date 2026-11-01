@@ -29,3 +29,14 @@ The JSON schema `JsonSchemaWriter` generates for a Haxe type.
 #### Scenario: A tagged enum with a constructor default
 - **WHEN** the schema of `@:tagged("kind") enum Shape { @:default({radius: 16}) circle(s:{radius:Float}); }` is generated
 - **THEN** the definition `Shape` has `"discriminator": {"propertyName": "kind"}` and `oneOf` holds `{"type": "object", "additionalProperties": false, "properties": {"kind": {"const": "circle"}, "radius": {"type": "number"}}, "required": ["kind", "radius"], "default": {"kind": "circle", "radius": 16}}`
+
+### Requirement: In display mode a schema writer is a stub with the same public API
+`JsonSchemaWriter` and `VSCodeSchemaWriter` SHALL, when the `display` define is set, type as the class `json2object.utils.schema.SchemaWriterDisplayStub` instead of a class generated for the type, with the public API of a generated writer: the constructor with an optional `space`, the variable `space` and the read-only property `schema`. No schema SHALL be built, and `schema` SHALL be `null`. Without the `display` define, a writer SHALL generate its schema as usual.
+
+#### Scenario: Typing a writer in display mode
+- **WHEN** `new JsonSchemaWriter<Array<Int>>().schema` is typed with `-D display`
+- **THEN** it compiles, as a `String`, and no schema type is built
+
+#### Scenario: Completion on a writer
+- **WHEN** completion is requested on a `new JsonSchemaWriter<T>()` value
+- **THEN** it offers `schema` and `space`

@@ -133,9 +133,11 @@ mkdir -p "$ROOT/.serena"
   echo "$MARK — do not edit."
   echo "# tests/ is typed here together with src/ (modules tests.*). References the compiler still does not"
   echo "# report — @:genericBuild types, enum constructors in case patterns, imports — are listed in AGENTS.md."
+  echo "# -D display: the cache build types what display requests type, so uses of the schema writers are"
+  echo "# references of SchemaWriterDisplayStub, and a plain compile of this file checks the display mode."
   echo "$LIBS"
   grep '^-cp ' "$COMMON"
-  echo "-w -WIfDisplay"
+  echo "-D display"
   { modules src; modules patched_utest; modules . tests; } | sort -u
 } > "$ROOT/.serena/lsp.hxml"
 
