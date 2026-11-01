@@ -21,13 +21,5 @@ SOFTWARE.
 */
 package json2object.utils.special;
 
-#if display
-class VSCodeSchemaWriter {
-	public function new (_:String='') {}
-	public var schema(get, never):String;
-	function get_schema() {return null;}
-}
-#else
 @:genericBuild(json2object.utils.schema.DataBuilder.build())
 class VSCodeSchemaWriter<T> { }
-#end

@@ -506,6 +506,9 @@ class DataBuilder {
 	}
 
 	public static function build() {
+		if (Context.defined("display")) {
+			return Context.getType("json2object.utils.schema.SchemaWriterDisplayStub");
+		}
 		switch (Context.getLocalType()) {
 			case TInst(_.get()=>c, [type]):
 				var parsingType:ParsingType = switch (c.name) {

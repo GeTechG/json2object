@@ -12,7 +12,7 @@ and https://github.com/haxetink/tink_macro/blob/296cc6c8610c5638a4f3b4a0f52d715c
 by Juraj Kirchheim MIT Licenced https://github.com/haxetink/tink_macro/blob/master/LICENSE
 **/
 class TypeTools {
-	#if (macro || display)
+	#if macro
 
 	public static inline function follow(type:Type, ?once:Bool):Type {
 		return StdTypeTools.follow(type, once);
