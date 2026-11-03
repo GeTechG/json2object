@@ -5,3 +5,40 @@ context: |
   elnabo/json2object. Its own rules live in AGENTS.md; its own specs live in openspec/specs.
   Consumers pin it by commit.
   Every commit is either code or infrastructure, never both (see openspec/specs/commit-kinds).
+
+# Per-artifact rules, injected only when that artifact is created. The steps of an issue are AGENTS.md "Workflow";
+# point at it, never restate it here.
+rules:
+  proposal:
+    - Create the change with `openspec new change <name>` (it writes `.openspec.yaml`), never the directory by hand.
+    - Say whether the change is code (`src/`, `tests/`) or infrastructure (`.github/infra-paths`); its commits never
+      mix the two (AGENTS.md "Commits").
+  specs:
+    - A requirement's text is at most 500 characters and states one behaviour with SHALL or MUST; details and edge
+      cases go in its scenarios.
+    - Every scenario is a `#### Scenario:` heading (exactly four `#`) with **WHEN** / **THEN** bullets; every
+      requirement has at least one.
+    - A spec states only observable behaviour; how it is implemented belongs in `design.md`.
+    - A MODIFIED requirement copies the whole requirement — text and every scenario — and changes it there; a partial
+      copy drops the rest at archive.
+    - A REMOVED requirement carries a **Reason** and a **Migration**.
+    - A new capability's spec has a Purpose of at least 50 characters that says what the capability is for, never
+      the `TBD` placeholder.
+  tasks:
+    - Each task group carries its own tests and documentation — no separate tests or docs group at the end.
+    - Every task names how it is checked (a test class, a command, a CI job, reading).
+    - What follows the tasks — review, archive, merge, a bump in a consumer — goes under `## Workflow follow-up` as
+      plain bullets, not checkboxes.
+    - A step only a human can do is written `- [ ] N.M [human] …`, a checkbox; agents never tick it (AGENTS.md
+      "Workflow", step 4).
+
+# Per-operation guidance, injected only into apply / archive.
+operations:
+  apply:
+    guidance:
+      - Follow AGENTS.md "Workflow" steps 2–3 and run the checks of AGENTS.md "Checks"; `[human]` tasks stay unticked.
+  archive:
+    guidance:
+      - Follow AGENTS.md "Workflow" step 3 — the spec sync and archive are the last commit of the change's branch.
+      - An archived change leaves no open task that is not `[human]`, and a new main spec gets a real Purpose (the
+        `openspec` CI job fails otherwise).
