@@ -30,7 +30,7 @@ only `context`, so artifacts get no format rules.
 - `openspec-gate`: the pinned OpenSpec version and what CI checks about the OpenSpec tree.
 
 ### Modified Capabilities
-- `json-schema`, `tagged-enum`: one requirement each is split to meet the 500-character limit; behaviour unchanged.
+- `json-schema`, `tagged-enum`: one requirement each is cut down to one behaviour (scenarios kept) and the behaviours it loses become ADDED requirements, to meet the 500-character limit; behaviour unchanged.
 
 ## Impact
 

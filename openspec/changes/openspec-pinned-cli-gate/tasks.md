@@ -12,7 +12,7 @@
 
 ## 3. Artifact rules
 
-- [ ] 3.1 `openspec/config.yaml`: `rules.specs`, `rules.tasks`, `operations.apply` / `operations.archive` guidance pointing at AGENTS.md *Workflow* — check: `openspec instructions specs --change openspec-pinned-cli-gate` shows the rules; the job's config check passes
+- [ ] 3.1 `openspec/config.yaml`: `rules.specs`, `rules.tasks`, `operations.apply` / `operations.archive` guidance pointing at AGENTS.md *Workflow* — check: `openspec instructions specs --change openspec-pinned-cli-gate` and `openspec instructions apply --change openspec-pinned-cli-gate` show the rules and the guidance
 
 ## 4. Main specs under `--strict`
 
