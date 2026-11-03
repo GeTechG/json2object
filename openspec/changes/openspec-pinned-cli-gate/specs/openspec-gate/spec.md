@@ -1,3 +1,7 @@
+## Purpose
+
+Keep the OpenSpec tree valid at one pinned OpenSpec version: CI runs that version and fails on what `openspec validate --strict` and the archive leave unchecked.
+
 ## ADDED Requirements
 
 ### Requirement: OpenSpec runs at the pinned version
