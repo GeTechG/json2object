@@ -10,3 +10,5 @@ tools/
 .mcp.json
 .codex/
 sgconfig.yml
+.claude/
+.agents/

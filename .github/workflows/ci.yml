@@ -28,6 +28,47 @@ jobs:
           fi
           bash .github/scripts/check-commit-kinds.sh "$range"
 
+  # OpenSpec at the version openspec/cli.pin names (openspec/specs/openspec-gate).
+  openspec:
+    runs-on: ubuntu-latest
+    env:
+      OPENSPEC_TELEMETRY: 0
+      OPENSPEC_NO_UPDATE_CHECK: 1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Main specs and active changes validate --strict
+        run: npm exec --yes --package="@fission-ai/openspec@$(cat openspec/cli.pin)" -- openspec validate --all --strict --no-interactive
+      - name: Purpose, change metadata, skill versions, archived tasks
+        run: |
+          bad=0
+          fail() { echo "::error::$*"; bad=1; }
+          pin=$(cat openspec/cli.pin)
+          for spec in openspec/specs/*/spec.md; do
+            if grep -q '^TBD - created by archiving change' "$spec"; then
+              fail "$spec: the Purpose is still the archive placeholder; write a real one"
+            fi
+          done
+          for change in openspec/changes/*/; do
+            change=${change%/}
+            [ "$change" = openspec/changes/archive ] && continue
+            [ -f "$change/.openspec.yaml" ] || fail "$change: no .openspec.yaml; create a change with 'openspec new change <name>', not by hand"
+          done
+          for skill in .claude/skills/openspec-*/SKILL.md .agents/skills/openspec-*/SKILL.md; do
+            [ -e "$skill" ] || continue
+            got=$(sed -n 's/^[[:space:]]*generatedBy:[[:space:]]*"\{0,1\}\([^"[:space:]]*\)"\{0,1\}[[:space:]]*$/\1/p' "$skill" | head -n 1)
+            [ "$got" = "$pin" ] || fail "$skill: generatedBy ${got:-(none)}, openspec/cli.pin pins $pin; run 'openspec update'"
+          done
+          for tasks in openspec/changes/archive/*/tasks.md; do
+            [ -e "$tasks" ] || continue
+            while IFS= read -r hit; do
+              fail "$tasks:${hit%%:*}: an open task in an archived change: ${hit#*:}"
+            done < <(grep -nE '^[[:space:]]*- \[ \]' "$tasks" | grep -vE '^[0-9]+:[[:space:]]*- \[ \] ([0-9.]+ )?\[human\]' || true)
+          done
+          exit $bad
+
   test:
     runs-on: ubuntu-latest
     steps:
